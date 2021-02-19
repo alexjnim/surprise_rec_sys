@@ -85,16 +85,14 @@ class DataLoader:
     def getYears(self):
         p = re.compile(r"(?:\((\d{4})\))?\s*$")
         years = defaultdict(int)
-        with open(self.itemsPath, newline="", encoding="ISO-8859-1") as csvfile:
-            itemReader = csv.reader(csvfile)
-            next(itemReader)
-            for row in itemReader:
-                itemID = int(row[0])
-                title = row[1]
-                m = p.search(title)
-                year = m.group(1)
-                if year:
-                    years[itemID] = int(year)
+        for i in range(len(self.itemsDF)):
+            row = itemsDF.iloc[i]
+            itemID = row[0]
+            title = row[1]
+            m = p.search(title)
+            year = m.group(1)
+            if year:
+                years[itemID] = int(year)
         return years
 
     def getItemName(self, itemID):
