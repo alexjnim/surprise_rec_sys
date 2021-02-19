@@ -1,7 +1,9 @@
 from data.DataLoader import DataLoader
-from processes.ContentKNNAlgorithm import ContentKNNAlgorithm
 from processes.AlgorithmStore import AlgorithmStore
 from surprise import NormalPredictor
+from surprise import SVD, SVDpp
+from customAlgorithms.ContentKNNAlgorithm import ContentKNNAlgorithm
+from customAlgorithms.TunedSVD import TunedSVD
 
 import random
 import numpy as np
@@ -22,13 +24,26 @@ def prepareAlgorithmStore(dataLoader, loadedData, rankings):
     # Construct an AlgorithmStore to store all algorithms for evaluation
     algorithmStore = AlgorithmStore(loadedData, rankings)
 
-    # Add the content based KNN here
-    # contentKNN = ContentKNNAlgorithm()
-    # algorithmStore.AddAlgorithm(contentKNN, "ContentKNN")
-
     # Just make random recommendations
     Random = NormalPredictor()
     algorithmStore.AddAlgorithm(Random, "Random")
+
+    # # Add the content based KNN here
+    # contentKNN = ContentKNNAlgorithm()
+    # algorithmStore.AddAlgorithm(contentKNN, "ContentKNN")
+
+    # # Add SVD
+    # SVDAlgorithm = SVD(random_state=10)
+    # algorithmStore.AddAlgorithm(SVDAlgorithm, "SVD")
+
+    # # Add SVDpp
+    # SVDPlusPlusAlgorithm = SVDpp(random_state=10)
+    # algorithmStore.AddAlgorithm(SVDPlusPlusAlgorithm, "SVD++")
+
+    # # Add TunedSVD
+    # TunedSVDAlgorithm = TunedSVD(dataLoader, loadedData, rankings)
+    # algorithmStore.AddAlgorithm(TunedSVDAlgorithm, "Tuned SVD")
+
     return algorithmStore
 
 
@@ -36,12 +51,11 @@ def run_recsys():
     (dataLoader, loadedData, rankings) = loadDataFunction()
     algorithmStore = prepareAlgorithmStore(dataLoader, loadedData, rankings)
 
-    # algorithmStore.GetMetrics(doTopN=False)
+    algorithmStore.GetMetrics(getAdditionalMetrics=False)
 
-    algorithmStore.SampleTopNRecs(dataLoader=dataLoader, testSubject=85, N=10)
+    # algorithmStore.SampleTopNRecs(dataLoader=dataLoader, testSubject=85, N=10)
 
 
 if __name__ == "__main__":
-
     random.seed(0)
     run_recsys()
