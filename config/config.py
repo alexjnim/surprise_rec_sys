@@ -1,5 +1,5 @@
-ratingsPath = "../ml-latest-small/ratings.csv"
-itemsPath = "../ml-latest-small/movies.csv"
+ratingsPath = "data/ratings.csv"
+itemsPath = "data/movies.csv"
 
 userIDColumn = "userId"
 itemIDColumn = "movieId"
