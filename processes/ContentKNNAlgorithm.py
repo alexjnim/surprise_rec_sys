@@ -55,9 +55,9 @@ class ContentKNNAlgorithm(AlgoBase):
         genres1 = genres[item1]
         genres2 = genres[item2]
         sumxx, sumxy, sumyy = 0, 0, 0
-        for i in range(len(genres1)):
-            x = genres1[i]
-            y = genres2[i]
+        for item in range(len(genres1)):
+            x = genres1[item]
+            y = genres2[item]
             sumxx += x * x
             sumyy += y * y
             sumxy += x * y
@@ -88,15 +88,15 @@ class ContentKNNAlgorithm(AlgoBase):
         else:
             return 0
 
-    def estimate(self, u, i):
+    def estimate(self, user, item):
 
-        if not (self.trainset.knows_user(u) and self.trainset.knows_item(i)):
+        if not (self.trainset.knows_user(user) and self.trainset.knows_item(item)):
             raise PredictionImpossible("User and/or item is unkown.")
 
         # Build up similarity scores between this item and everything the user rated
         neighbors = []
-        for rating in self.trainset.ur[u]:
-            genreSimilarity = self.similarities[i, rating[0]]
+        for rating in self.trainset.ur[user]:
+            genreSimilarity = self.similarities[item, rating[0]]
             neighbors.append((genreSimilarity, rating[1]))
 
         # Extract the top-K most-similar ratings
