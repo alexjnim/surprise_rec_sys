@@ -8,7 +8,7 @@ class PrepareAlgorithm:
         self.name = name
         self.GetEvaluationMetrics = GetEvaluationMetrics()
 
-    def Evaluate(self, preparedData, doTopN, N=10, verbose=True):
+    def Evaluate(self, preparedData, getAdditionalMetrics, N=10, verbose=True):
         metrics = {}
         # Compute accuracy
         if verbose:
@@ -19,7 +19,7 @@ class PrepareAlgorithm:
         metrics["RMSE"] = self.GetEvaluationMetrics.RMSE(predictions=predictions)
         metrics["MAE"] = self.GetEvaluationMetrics.MAE(predictions=predictions)
 
-        if doTopN:
+        if getAdditionalMetrics:
             # Evaluate top-10 with Leave One Out testing
             if verbose:
                 print("Evaluating top-N with leave-one-out...")
