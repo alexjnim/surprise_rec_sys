@@ -86,7 +86,7 @@ class DataLoader:
         p = re.compile(r"(?:\((\d{4})\))?\s*$")
         years = defaultdict(int)
         for i in range(len(self.itemsDF)):
-            row = itemsDF.iloc[i]
+            row = self.itemsDF.iloc[i]
             itemID = row[0]
             title = row[1]
             m = p.search(title)
