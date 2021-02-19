@@ -35,51 +35,12 @@ class DataLoader:
         # self.ratingsDataset = Dataset.load_from_file(self.ratingsPath, reader=reader)
         return self.ratingsDataset
 
-    # def loadData(self):
-
-    #     # Look for files relative to the directory we are running from
-    #     # os.chdir(os.path.dirname(sys.argv[0]))
-
-    #     ratingsDataset = 0
-
-    #     reader = Reader(line_format="user item rating timestamp", sep=",", skip_lines=1)
-
-    #     ratingsDataset = Dataset.load_from_file(self.ratingsPath, reader=reader)
-
-    #     with open(self.itemsPath, newline="", encoding="ISO-8859-1") as csvfile:
-    #         itemReader = csv.reader(csvfile)
-    #         next(itemReader)  # Skip header line
-    #         for row in itemReader:
-    #             itemID = int(row[0])
-    #             itemName = row[1]
-    #             self.itemID_to_name[itemID] = itemName
-    #             self.name_to_itemID[itemName] = itemID
-
-    #     return ratingsDataset
-
     def getUserRatings(self, user):
         userRatings = self.ratingsDF[self.ratingsDF[config.userIDColumn] == user][
             [config.itemIDColumn, config.ratingsColumn]
         ]
         return userRatings
 
-    # def getUserRatings(self, user):
-    #     userRatings = []
-    #     hitUser = False
-    #     with open(self.ratingsPath, newline="") as csvfile:
-    #         ratingReader = csv.reader(csvfile)
-    #         next(ratingReader)
-    #         for row in ratingReader:
-    #             userID = int(row[0])
-    #             if user == userID:
-    #                 itemID = int(row[1])
-    #                 rating = float(row[2])
-    #                 userRatings.append((itemID, rating))
-    #                 hitUser = True
-    #             if hitUser and (user != userID):
-    #                 break
-
-    #     return userRatings
     def getPopularityRanks(self):
         item_freq = self.ratingsDF[config.itemIDColumn].value_counts()
         popularity_rankings = pd.Series(
@@ -87,22 +48,6 @@ class DataLoader:
         )
         return popularity_rankings
 
-    # def getPopularityRanks(self):
-    #     ratings = defaultdict(int)
-    #     rankings = defaultdict(int)
-    #     with open(self.ratingsPath, newline="") as csvfile:
-    #         ratingReader = csv.reader(csvfile)
-    #         next(ratingReader)
-    #         for row in ratingReader:
-    #             itemID = int(row[1])
-    #             ratings[itemID] += 1
-    #     rank = 1
-    #     for itemID, ratingCount in sorted(
-    #         ratings.items(), key=lambda x: x[1], reverse=True
-    #     ):
-    #         rankings[itemID] = rank
-    #         rank += 1
-    #     return rankings
     def getGenres(self):
         # this will store the genres for each film
         genres = defaultdict(list)
@@ -137,35 +82,6 @@ class DataLoader:
 
         return genres
 
-    # def getGenres(self):
-    #     genres = defaultdict(list)
-    #     genreIDs = {}
-    #     maxGenreID = 0
-    #     with open(self.itemsPath, newline="", encoding="ISO-8859-1") as csvfile:
-    #         itemReader = csv.reader(csvfile)
-    #         next(itemReader)  # Skip header line
-    #         for row in itemReader:
-    #             itemID = int(row[0])
-    #             genreList = row[2].split("|")
-    #             genreIDList = []
-    #             for genre in genreList:
-    #                 if genre in genreIDs:
-    #                     genreID = genreIDs[genre]
-    #                 else:
-    #                     genreID = maxGenreID
-    #                     genreIDs[genre] = genreID
-    #                     maxGenreID += 1
-    #                 genreIDList.append(genreID)
-    #             genres[itemID] = genreIDList
-    #     # Convert integer-encoded genre lists to bitfields that we can treat as vectors
-    #     for (itemID, genreIDList) in genres.items():
-    #         bitfield = [0] * maxGenreID
-    #         for genreID in genreIDList:
-    #             bitfield[genreID] = 1
-    #         genres[itemID] = bitfield
-
-    #     return genres
-
     def getYears(self):
         p = re.compile(r"(?:\((\d{4})\))?\s*$")
         years = defaultdict(int)
@@ -189,12 +105,6 @@ class DataLoader:
         else:
             return "Not available"
 
-    # def getItemName(self, itemID):
-    #     if itemID in self.itemID_to_name:
-    #         return self.itemID_to_name[itemID]
-    #     else:
-    #         return ""
-
     def getItemID(self, itemName):
         if itemName in list(self.itemsDF[config.itemTitleColumn]):
             return self.itemsDF[config.itemIDColumn][
@@ -202,9 +112,3 @@ class DataLoader:
             ].iloc[0]
         else:
             return "Not available"
-
-    # def getItemID(self, itemName):
-    #     if itemName in self.name_to_itemID:
-    #         return self.name_to_itemID[itemName]
-    #     else:
-    #         return 0
