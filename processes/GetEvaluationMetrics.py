@@ -4,7 +4,7 @@ from surprise import accuracy
 from collections import defaultdict
 
 
-class RecommenderMetrics:
+class GetEvaluationMetrics:
     def __init__(self):
         self.store = 0
 

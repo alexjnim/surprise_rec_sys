@@ -1,4 +1,4 @@
-from metrics.RecommenderMetrics import RecommenderMetrics
+from processes.GetEvaluationMetrics import GetEvaluationMetrics
 from data.PreparedData import PreparedData
 
 
@@ -6,7 +6,7 @@ class PrepareAlgorithm:
     def __init__(self, algorithm, name):
         self.algorithm = algorithm
         self.name = name
-        self.RecommenderMetrics = RecommenderMetrics()
+        self.GetEvaluationMetrics = GetEvaluationMetrics()
 
     def Evaluate(self, preparedData, doTopN, N=10, verbose=True):
         metrics = {}
@@ -16,8 +16,8 @@ class PrepareAlgorithm:
         self.algorithm.fit(preparedData.GetTrainSet())
 
         predictions = self.algorithm.test(preparedData.GetTestSet())
-        metrics["RMSE"] = self.RecommenderMetrics.RMSE(predictions=predictions)
-        metrics["MAE"] = self.RecommenderMetrics.MAE(predictions=predictions)
+        metrics["RMSE"] = self.GetEvaluationMetrics.RMSE(predictions=predictions)
+        metrics["MAE"] = self.GetEvaluationMetrics.MAE(predictions=predictions)
 
         if doTopN:
             # Evaluate top-10 with Leave One Out testing
@@ -30,20 +30,20 @@ class PrepareAlgorithm:
             allPredictions = self.algorithm.test(preparedData.GetLOOCVAntiTestSet())
 
             # Compute top 10 recs for each user
-            topNPredicted = self.RecommenderMetrics.GetTopN(allPredictions, N)
+            topNPredicted = self.GetEvaluationMetrics.GetTopN(allPredictions, N)
 
             if verbose:
                 print("Computing hit-rate and rank metrics...")
             # See how often we recommended a movie the user actually rated
-            metrics["HR"] = self.RecommenderMetrics.HitRate(
+            metrics["HR"] = self.GetEvaluationMetrics.HitRate(
                 topNPredicted, leftOutPredictions
             )
             # See how often we recommended a movie the user actually liked
-            metrics["cHR"] = self.RecommenderMetrics.CumulativeHitRate(
+            metrics["cHR"] = self.GetEvaluationMetrics.CumulativeHitRate(
                 topNPredicted, leftOutPredictions
             )
             # Compute ARHR
-            metrics["ARHR"] = self.RecommenderMetrics.AverageReciprocalHitRank(
+            metrics["ARHR"] = self.GetEvaluationMetrics.AverageReciprocalHitRank(
                 topNPredicted, leftOutPredictions
             )
 
@@ -52,22 +52,22 @@ class PrepareAlgorithm:
                 print("Computing recommendations with full data set...")
             self.algorithm.fit(preparedData.GetFullTrainSet())
             allPredictions = self.algorithm.test(preparedData.GetFullAntiTestSet())
-            topNPredicted = self.RecommenderMetrics.GetTopN(allPredictions, N)
+            topNPredicted = self.GetEvaluationMetrics.GetTopN(allPredictions, N)
             if verbose:
                 print("Analyzing coverage, diversity, and novelty...")
             # Print user coverage with a minimum predicted rating of 4.0:
-            metrics["Coverage"] = self.RecommenderMetrics.UserCoverage(
+            metrics["Coverage"] = self.GetEvaluationMetrics.UserCoverage(
                 topNPredicted,
                 preparedData.GetFullTrainSet().n_users,
                 ratingThreshold=4.0,
             )
             # Measure diversity of recommendations:
-            metrics["Diversity"] = self.RecommenderMetrics.Diversity(
+            metrics["Diversity"] = self.GetEvaluationMetrics.Diversity(
                 topNPredicted, preparedData.GetSimilarities()
             )
 
             # Measure novelty (average popularity rank of recommendations):
-            metrics["Novelty"] = self.RecommenderMetrics.Novelty(
+            metrics["Novelty"] = self.GetEvaluationMetrics.Novelty(
                 topNPredicted, preparedData.GetPopularityRankings()
             )
 
