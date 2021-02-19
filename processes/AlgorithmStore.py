@@ -14,18 +14,18 @@ class AlgorithmStore:
         preparedAlgorithm = PrepareAlgorithm(algorithm, name)
         self.algorithms.append(preparedAlgorithm)
 
-    def GetMetrics(self, doTopN):
+    def GetMetrics(self, getAdditionalMetrics):
         results = {}
         for preparedAlgorithm in self.algorithms:
             print("Evaluating ", preparedAlgorithm.GetName(), "...")
             results[preparedAlgorithm.GetName()] = preparedAlgorithm.Evaluate(
-                self.preparedData, doTopN
+                self.preparedData, getAdditionalMetrics
             )
 
         # Print results
         print("\n")
 
-        if doTopN:
+        if getAdditionalMetrics:
             print(
                 "{:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}".format(
                     "Algorithm",
@@ -65,7 +65,7 @@ class AlgorithmStore:
         print("\nLegend:\n")
         print("RMSE:      Root Mean Squared Error. Lower values mean better accuracy.")
         print("MAE:       Mean Absolute Error. Lower values mean better accuracy.")
-        if doTopN:
+        if getAdditionalMetrics:
             print(
                 "HR:        Hit Rate; how often we are able to recommend a left-out rating. Higher is better."
             )
