@@ -115,6 +115,17 @@ class DataLoader:
         else:
             return "Not available"
 
+    def getLatestItems(self):
+        latestItems = []
+        years = self.getYears()
+        # What's the latest year in our data?
+        latestYear = max(years.values())
+        for itemID, year in years.items():
+            if year == latestYear:
+                latestItems.append(itemID)
+                # print(self.getItemName(itemID))
+        return latestItems
+
 
 def removeOutlierUsers(ratingsDF, outlierStdDev=config.outlierStdDev):
     """
