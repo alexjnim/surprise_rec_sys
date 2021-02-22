@@ -89,23 +89,23 @@ class AlgorithmStore:
 
     def SampleTopNRecs(self, dataLoader, testSubject=1, N=10, numberOfLatestItems=0):
 
-        for algo in self.algorithms:
-            print("\nUsing recommender ", algo.GetName())
+        for algorithm in self.algorithms:
+            print("\nUsing recommender ", algorithm.GetName())
 
             # has to be trained on the full trainset (100% of the data) here to give full recommendations
             # the GetMetrics part were trained on 75% data, LOOCV data, etc.
             print("\nBuilding recommendation model...")
             trainSet = self.preparedData.GetFullTrainSet()
-            algo.GetAlgorithm().fit(trainSet)
+            algorithm.GetAlgorithm().fit(trainSet)
 
             print("Computing recommendations...")
             testSet = self.preparedData.GetAntiTestSetForUser(testSubject)
 
-            predictions = algo.GetAlgorithm().test(testSet)
+            predictions = algorithm.GetAlgorithm().test(testSet)
             print(predictions[0])
             recommendations = []
 
-            print("\nFor", algo.GetName(), "we recommend:")
+            print("\nFor", algorithm.GetName(), "we recommend:")
             for userID, itemID, actualRating, estimatedRating, _ in predictions:
                 intItemID = int(itemID)
                 recommendations.append((intItemID, estimatedRating))
