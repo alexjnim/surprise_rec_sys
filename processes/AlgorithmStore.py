@@ -101,6 +101,7 @@ class AlgorithmStore:
             print("Computing recommendations...")
             testSet = self.preparedData.GetAntiTestSetForUser(testSubject)
 
+            # .test() is a in-built function, part of the surprise algobase
             predictions = algorithm.GetAlgorithm().test(testSet)
             print(predictions[0])
             recommendations = []
