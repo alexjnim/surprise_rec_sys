@@ -13,17 +13,21 @@ import pandas as pd
 
 
 class DataLoader:
-    def __init__(self):
+    def __init__(self, removeOutlierUsers=config.removeOutlierUsers):
         self.ratingsPath = config.ratingsPath
         self.itemsPath = config.itemsPath
         self.itemsDF = pd.read_csv(self.itemsPath)
         self.ratingsDF = pd.read_csv(self.ratingsPath)
+        self.removeOutlierUsers = removeOutlierUsers
 
     def loadData(self):
         # preparing pandas dataframes
         self.ratingsDF = self.ratingsDF[
             [config.userIDColumn, config.itemIDColumn, config.ratingsColumn]
         ]
+
+        if self.removeOutlierUsers:
+            self.ratingsDF = removeOutlierUsers(self.ratingsDF)
 
         reader = Reader(
             rating_scale=(0, 5),
@@ -110,3 +114,40 @@ class DataLoader:
             ].iloc[0]
         else:
             return "Not available"
+
+
+def removeOutlierUsers(ratingsDF, outlierStdDev=config.outlierStdDev):
+    """
+    This function will remove any users from the data that have rated items disproportionately.
+    This tends to indicate that the entry is a potential bot
+    Args:
+        ratingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data
+
+    Returns:
+        filteredRatingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data with outliers removed
+    """
+    ratingsPerUser = ratingsDF.groupby("userId", as_index=False).agg(
+        {"rating": "count"}
+    )
+    # print("Ratings by user:")
+    # print(ratingsPerUser.head())
+
+    ratingsPerUser["outlier"] = (
+        abs(ratingsPerUser.rating - ratingsPerUser.rating.mean())
+        > ratingsPerUser.rating.std() * outlierStdDev
+    )
+    # print("Outlier Users:")
+    # print(ratingsPerUser[ratingsPerUser["outlier"] == True].head())
+    ratingsPerUser = ratingsPerUser.drop(columns=["rating"])
+
+    combined = ratingsDF.merge(ratingsPerUser, on="userId", how="left")
+    # print("Merged dataframes:")
+    # print(combined.head())
+
+    filteredRatingsDF = combined.loc[combined["outlier"] == False]
+    filteredRatingsDF = filteredRatingsDF.drop(columns=["outlier"])
+    # print("Filtered ratingsDF data:")
+    # print(filteredRatingsDF.head())
+    # print(filteredRatingsDF.shape)
+
+    return filteredRatingsDF
