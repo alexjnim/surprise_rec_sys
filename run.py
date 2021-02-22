@@ -48,12 +48,12 @@ def prepareAlgorithmStore(dataLoader, loadedData, rankings):
     # TunedSVDAlgorithm = TunedSVD(dataLoader, loadedData, rankings)
     # algorithmStore.AddAlgorithm(TunedSVDAlgorithm, "Tuned SVD")
 
-    # Build Hybrid ensemble algorithm
-    SimpleRBM = BaselineOnly()
-    ContentKNN = ContentKNNAlgorithm()
-    # Combine them
-    Hybrid = HybridAlgorithm([SimpleRBM, ContentKNN], [0.5, 0.5])
-    algorithmStore.AddAlgorithm(Hybrid, "Hybrid")
+    # # Build Hybrid ensemble algorithm
+    # SimpleRBM = BaselineOnly()
+    # ContentKNN = ContentKNNAlgorithm()
+    # # Combine them
+    # Hybrid = HybridAlgorithm([SimpleRBM, ContentKNN], [0.5, 0.5])
+    # algorithmStore.AddAlgorithm(Hybrid, "Hybrid")
 
     return algorithmStore
 
@@ -62,9 +62,11 @@ def run_recsys():
     (dataLoader, loadedData, rankings) = loadDataFunction()
     algorithmStore = prepareAlgorithmStore(dataLoader, loadedData, rankings)
 
-    algorithmStore.GetMetrics(getAdditionalMetrics=False)
+    # algorithmStore.GetMetrics(getAdditionalMetrics=False)
 
-    # algorithmStore.SampleTopNRecs(dataLoader=dataLoader, testSubject=85, N=10)
+    algorithmStore.SampleTopNRecs(
+        dataLoader=dataLoader, testSubject=85, N=8, numberOfLatestItems=2
+    )
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+from data.DataLoader import DataLoader
 from data.PreparedData import PreparedData
 from processes.PrepareAlgorithm import PrepareAlgorithm
 
@@ -70,7 +71,7 @@ class AlgorithmStore:
                 "HR:        Hit Rate; how often we are able to recommend a left-out rating. Higher is better."
             )
             print(
-                "cHR:       Cumulative Hit Rate; hit rate, confined to ratings above a certain threshold. Higher is better."
+                "cHR:       Cumulative Hit Rate; hit rate, confined to recommendation above a certain threshold. Higher is better."
             )
             print(
                 "ARHR:      Average Reciprocal Hit Rank - Hit rate that takes the ranking into account. Higher is better."
@@ -86,7 +87,7 @@ class AlgorithmStore:
                 "Novelty:   Average popularity rank of recommended items. Higher means more novel."
             )
 
-    def SampleTopNRecs(self, dataLoader, testSubject=1, N=10):
+    def SampleTopNRecs(self, dataLoader, testSubject=1, N=10, numberOfLatestItems=0):
 
         for algo in self.algorithms:
             print("\nUsing recommender ", algo.GetName())
@@ -101,7 +102,7 @@ class AlgorithmStore:
             testSet = self.preparedData.GetAntiTestSetForUser(testSubject)
 
             predictions = algo.GetAlgorithm().test(testSet)
-
+            print(predictions[0])
             recommendations = []
 
             print("\nFor", algo.GetName(), "we recommend:")
@@ -111,5 +112,37 @@ class AlgorithmStore:
 
             recommendations.sort(key=lambda x: x[1], reverse=True)
 
-            for ratings in recommendations[:N]:
-                print(dataLoader.getItemName(ratings[0]), ratings[1])
+            for recommendation in recommendations[:N]:
+                print(dataLoader.getItemName(recommendation[0]), recommendation[1])
+
+            # get the recommendations from the most recent year
+            if numberOfLatestItems > 0:
+                latestRecommendations = getLatestItemsRecommendations(
+                    dataLoader, numberOfLatestItems, recommendations
+                )
+                for recommendation in latestRecommendations:
+                    print(dataLoader.getItemName(recommendation[0]), recommendation[1])
+
+
+def getLatestItemsRecommendations(dataLoader, numberOfLatestItems, recommendations):
+    """This function will get recommendations from the latest year, and match it with the ratings predictions of the given algorithm, thus sorting them by the highest rating prediction and thus allowing the system to recommend a new item with the highest rating prediction.
+
+    Args:
+        dataLoader (DataLoader Class): generated from data/DataLoader.py, this will get the list of newest items
+        numberOfLatestItems (int): number of new items to have in the predictions
+        recommendations (list): list of recommendations containing item IDs and predicted ratings
+
+    Returns:
+        latestRecommendations (list): containing item IDs and predicted ratings of the newest items in dataset
+    """
+    latestItems = dataLoader.getLatestItems()
+    latestRecommendations = []
+    for recommendation in recommendations:
+        if recommendation[0] in latestItems:
+            latestRecommendations.append(recommendation)
+    latestRecommendations.sort(key=lambda x: x[1], reverse=True)
+
+    if numberOfLatestItems > len(latestRecommendations):
+        return latestRecommendations
+    else:
+        return latestRecommendations[:numberOfLatestItems]
