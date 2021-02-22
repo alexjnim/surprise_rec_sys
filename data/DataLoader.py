@@ -13,12 +13,14 @@ import pandas as pd
 
 
 class DataLoader:
-    def __init__(self, removeOutlierUsers=config.removeOutlierUsers):
+    def __init__(self):
         self.ratingsPath = config.ratingsPath
         self.itemsPath = config.itemsPath
         self.itemsDF = pd.read_csv(self.itemsPath)
         self.ratingsDF = pd.read_csv(self.ratingsPath)
-        self.removeOutlierUsers = removeOutlierUsers
+        self.removeOutlierUsers = config.removeOutlierUsers
+        self.useStoplist = config.useStoplist
+        self.stoplistWords = config.stoplistWords
 
     def loadData(self):
         # preparing pandas dataframes
@@ -27,16 +29,14 @@ class DataLoader:
         ]
 
         if self.removeOutlierUsers:
-            self.ratingsDF = removeOutlierUsers(self.ratingsDF)
+            self.removeOutliers()
 
-        reader = Reader(
-            rating_scale=(0, 5),
-            # line_format="user item rating timestamp",
-            # sep=",",
-            # skip_lines=1,
-        )
+        reader = Reader(rating_scale=(0, 5))
         self.ratingsDataset = Dataset.load_from_df(self.ratingsDF, reader=reader)
-        # self.ratingsDataset = Dataset.load_from_file(self.ratingsPath, reader=reader)
+
+        if self.useStoplist:
+            self.buildStoplist()
+
         return self.ratingsDataset
 
     def getUserRatings(self, user):
@@ -126,39 +126,52 @@ class DataLoader:
                 # print(self.getItemName(itemID))
         return latestItems
 
+    def removeOutliers(self, outlierStdDev=config.outlierStdDev):
+        """
+        This function will remove any users from the data that have rated items disproportionately.
+        This tends to indicate that the entry is a potential bot
+        Args:
+            ratingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data
 
-def removeOutlierUsers(ratingsDF, outlierStdDev=config.outlierStdDev):
-    """
-    This function will remove any users from the data that have rated items disproportionately.
-    This tends to indicate that the entry is a potential bot
-    Args:
-        ratingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data
+        Returns:
+            filteredRatingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data with outliers removed
+        """
+        ratingsPerUser = self.ratingsDF.groupby("userId", as_index=False).agg(
+            {"rating": "count"}
+        )
+        # print("Ratings by user:")
+        # print(ratingsPerUser.head())
 
-    Returns:
-        filteredRatingsDF (DataFrame): Pandas DataFrame object of the ratingsDF data with outliers removed
-    """
-    ratingsPerUser = ratingsDF.groupby("userId", as_index=False).agg(
-        {"rating": "count"}
-    )
-    # print("Ratings by user:")
-    # print(ratingsPerUser.head())
+        # if the total ratings of the given user is 3 std away from the mean rating, then we classify this user as a bot
+        ratingsPerUser["outlier"] = (
+            abs(ratingsPerUser.rating - ratingsPerUser.rating.mean())
+            > ratingsPerUser.rating.std() * outlierStdDev
+        )
+        # print("Outlier Users:")
+        # print(ratingsPerUser[ratingsPerUser["outlier"] == True].head())
+        ratingsPerUser = ratingsPerUser.drop(columns=["rating"])
 
-    ratingsPerUser["outlier"] = (
-        abs(ratingsPerUser.rating - ratingsPerUser.rating.mean())
-        > ratingsPerUser.rating.std() * outlierStdDev
-    )
-    # print("Outlier Users:")
-    # print(ratingsPerUser[ratingsPerUser["outlier"] == True].head())
-    ratingsPerUser = ratingsPerUser.drop(columns=["rating"])
+        combined = self.ratingsDF.merge(ratingsPerUser, on="userId", how="left")
+        # print("Merged dataframes:")
+        # print(combined.head())
 
-    combined = ratingsDF.merge(ratingsPerUser, on="userId", how="left")
-    # print("Merged dataframes:")
-    # print(combined.head())
+        filteredRatingsDF = combined.loc[combined["outlier"] == False]
+        filteredRatingsDF = filteredRatingsDF.drop(columns=["outlier"])
+        # print("Filtered ratingsDF data:")
+        # print(filteredRatingsDF.head())
+        # print(filteredRatingsDF.shape)
 
-    filteredRatingsDF = combined.loc[combined["outlier"] == False]
-    filteredRatingsDF = filteredRatingsDF.drop(columns=["outlier"])
-    # print("Filtered ratingsDF data:")
-    # print(filteredRatingsDF.head())
-    # print(filteredRatingsDF.shape)
+        self.ratingsDF = filteredRatingsDF
 
-    return filteredRatingsDF
+    def buildStoplist(self):
+        trainset = self.ratingsDataset.build_full_trainset()
+        self.stoplist = []
+        for innerItemID in trainset.all_items():
+            itemID = trainset.to_raw_iid(innerItemID)
+            title = self.getItemName(int(itemID))
+            if title:
+                title = title.lower()
+                for term in self.stoplistWords:
+                    if term in title:
+                        # print("Blocked ", title)
+                        self.stoplist.append(innerItemID)

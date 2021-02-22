@@ -1,6 +1,7 @@
 from data.DataLoader import DataLoader
 from data.PreparedData import PreparedData
 from processes.PrepareAlgorithm import PrepareAlgorithm
+from config import config
 
 
 class AlgorithmStore:
@@ -103,13 +104,19 @@ class AlgorithmStore:
 
             # .test() is a in-built function, part of the surprise algobase
             predictions = algorithm.GetAlgorithm().test(testSet)
-            print(predictions[0])
             recommendations = []
 
             print("\nFor", algorithm.GetName(), "we recommend:")
             for userID, itemID, actualRating, estimatedRating, _ in predictions:
                 intItemID = int(itemID)
                 recommendations.append((intItemID, estimatedRating))
+
+            # filter by stoplist
+            if config.useStoplist:
+                recommendations = filterRecommendationsWithStoplist(
+                    dataLoader,
+                    recommendations,
+                )
 
             recommendations.sort(key=lambda x: x[1], reverse=True)
 
@@ -126,7 +133,9 @@ class AlgorithmStore:
 
 
 def getLatestItemsRecommendations(dataLoader, numberOfLatestItems, recommendations):
-    """This function will get recommendations from the latest year, and match it with the ratings predictions of the given algorithm, thus sorting them by the highest rating prediction and thus allowing the system to recommend a new item with the highest rating prediction.
+    """
+    This function will get recommendations from the latest year, and match it with the ratings predictions of the given algorithm,
+    thus sorting them by the highest rating prediction and thus allowing the system to recommend a new item with the highest rating prediction.
 
     Args:
         dataLoader (DataLoader Class): generated from data/DataLoader.py, this will get the list of newest items
@@ -147,3 +156,14 @@ def getLatestItemsRecommendations(dataLoader, numberOfLatestItems, recommendatio
         return latestRecommendations
     else:
         return latestRecommendations[:numberOfLatestItems]
+
+
+def filterRecommendationsWithStoplist(dataLoader, recommendations):
+    filteredRecommendations = []
+    print("length of recommendations before:" + str(len(recommendations)))
+    for recommendation in recommendations:
+        if recommendation[0] not in dataLoader.stoplist:
+            filteredRecommendations.append(recommendation)
+
+    print("length of recommendations before:" + str(len(filteredRecommendations)))
+    return filteredRecommendations
