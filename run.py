@@ -1,9 +1,13 @@
 from data.DataLoader import DataLoader
 from processes.AlgorithmStore import AlgorithmStore
+
 from surprise import NormalPredictor
 from surprise import SVD, SVDpp
+from surprise import BaselineOnly
+
 from customAlgorithms.ContentKNNAlgorithm import ContentKNNAlgorithm
 from customAlgorithms.TunedSVD import TunedSVD
+from customAlgorithms.HybridAlgorithm import HybridAlgorithm
 
 import random
 import numpy as np
@@ -43,6 +47,13 @@ def prepareAlgorithmStore(dataLoader, loadedData, rankings):
     # # Add TunedSVD
     # TunedSVDAlgorithm = TunedSVD(dataLoader, loadedData, rankings)
     # algorithmStore.AddAlgorithm(TunedSVDAlgorithm, "Tuned SVD")
+
+    # Build Hybrid ensemble algorithm
+    SimpleRBM = BaselineOnly()
+    ContentKNN = ContentKNNAlgorithm()
+    # Combine them
+    Hybrid = HybridAlgorithm([SimpleRBM, ContentKNN], [0.5, 0.5])
+    algorithmStore.AddAlgorithm(Hybrid, "Hybrid")
 
     return algorithmStore
 

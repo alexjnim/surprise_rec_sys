@@ -92,7 +92,7 @@ class AlgorithmStore:
             print("\nUsing recommender ", algo.GetName())
 
             # has to be trained on the full trainset (100% of the data) here to give full recommendations
-            # the GetMetrics part were trained on 75%, LOOCV, etc.
+            # the GetMetrics part were trained on 75% data, LOOCV data, etc.
             print("\nBuilding recommendation model...")
             trainSet = self.preparedData.GetFullTrainSet()
             algo.GetAlgorithm().fit(trainSet)
